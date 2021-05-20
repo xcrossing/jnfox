@@ -5,10 +5,10 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/xcrossing/jnfo"
+	"github.com/xcrossing/jnfox/pool"
 )
 
 func main() {
@@ -26,36 +26,22 @@ func main() {
 			}
 			path := u.Path
 
-			var wg sync.WaitGroup
-			wg.Add(coverThreads)
-
-			ch := make(chan string)
-			for thread := 0; thread < coverThreads; thread++ {
-				go func() {
-					for {
-						addr, ok := <-ch
-						if !ok {
-							break
-						}
-						nfo, err := jnfo.New(addr)
-						if err != nil {
-							fmt.Fprintf(os.Stderr, "%s %s\n", addr, err.Error())
-						} else {
-							fmt.Println(nfo.NumCastPicName())
-						}
-					}
-					wg.Done()
-				}()
-			}
+			p := pool.MakePool(coverThreads, func(addr string) {
+				nfo, err := jnfo.New(addr)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s %s\n", addr, err.Error())
+				} else {
+					fmt.Println(nfo.NumCastPicName())
+				}
+			})
 
 			for _, num := range nums {
 				u.Path = filepath.Join(path, num)
 				addr := u.String()
-				ch <- addr
+				p.Add(addr)
 			}
 
-			close(ch)
-			wg.Wait()
+			p.Wait()
 		},
 	}
 
