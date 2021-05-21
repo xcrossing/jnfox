@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	var coverThreads int
+	var threads int
 	var cmdCover = &cobra.Command{
 		Use:   "cover [nums]",
 		Short: "Get Cover directly",
@@ -25,7 +25,7 @@ func main() {
 			}
 			path := u.Path
 
-			p := makePool(coverThreads, func(addr string) {
+			p := makePool(threads, func(addr string) {
 				nfo, err := jnfo.New(addr)
 				if err == nil {
 					err = download(nfo.PicLink, nfo.NumCastPicName())
@@ -46,9 +46,41 @@ func main() {
 		},
 	}
 
-	cmdCover.Flags().IntVarP(&coverThreads, "threads", "t", 2, "threads to get cover")
+	cmdCover.Flags().IntVarP(&threads, "threads", "t", 2, "threads to get cover")
+
+	var cmdCacheCover = &cobra.Command{
+		Use:   "cache-cover [nums]",
+		Short: "Get Cover from cache first, then from web",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, nums []string) {
+			mg, err := newMgInstance()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+			}
+			defer mg.close()
+
+			p := makePool(threads, func(num string) {
+				doc, err := mg.fetch(num)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+					return
+				}
+				fmt.Println(doc.picName())
+			})
+
+			for _, num := range nums {
+				p.add(num)
+			}
+
+			p.wait()
+
+			fmt.Println(nums)
+		},
+	}
+
+	cmdCacheCover.Flags().IntVarP(&threads, "threads", "t", 2, "threads to get cover")
 
 	var rootCmd = &cobra.Command{Use: "jnfox"}
-	rootCmd.AddCommand(cmdCover)
+	rootCmd.AddCommand(cmdCover, cmdCacheCover)
 	rootCmd.Execute()
 }
