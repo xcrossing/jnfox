@@ -1,4 +1,4 @@
-package pool
+package main
 
 import "sync"
 
@@ -7,7 +7,7 @@ type pool struct {
 	ch chan string
 }
 
-func MakePool(threadCount int, fn func(str string)) *pool {
+func makePool(threadCount int, fn func(str string)) *pool {
 	p := new(pool)
 	p.wg.Add(threadCount)
 	p.ch = make(chan string)
@@ -28,11 +28,11 @@ func MakePool(threadCount int, fn func(str string)) *pool {
 	return p
 }
 
-func (p *pool) Add(str string) {
+func (p *pool) add(str string) {
 	p.ch <- str
 }
 
-func (p *pool) Wait() {
+func (p *pool) wait() {
 	close(p.ch)
 	p.wg.Wait()
 }

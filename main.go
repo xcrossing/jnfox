@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/xcrossing/jnfo"
-	"github.com/xcrossing/jnfox/pool"
 )
 
 func main() {
@@ -26,22 +25,24 @@ func main() {
 			}
 			path := u.Path
 
-			p := pool.MakePool(coverThreads, func(addr string) {
+			p := makePool(coverThreads, func(addr string) {
 				nfo, err := jnfo.New(addr)
+				if err == nil {
+					err = download(nfo.PicLink, nfo.NumCastPicName())
+				}
+
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "%s %s\n", addr, err.Error())
-				} else {
-					fmt.Println(nfo.NumCastPicName())
 				}
 			})
 
 			for _, num := range nums {
 				u.Path = filepath.Join(path, num)
 				addr := u.String()
-				p.Add(addr)
+				p.add(addr)
 			}
 
-			p.Wait()
+			p.wait()
 		},
 	}
 
