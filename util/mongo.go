@@ -62,8 +62,11 @@ func (mg *mgInstance) Close() {
 
 func (mg *mgInstance) Fetch(bango string) (*mgDoc, error) {
 	doc := &mgDoc{}
-	err := mg.collection.FindOne(aCtx(), bson.D{{"bango", bango}}).Decode(doc)
-	if err != nil {
+	result := mg.collection.FindOne(aCtx(), bson.D{{"bango", bango}})
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+	if err := result.Decode(doc); err != nil {
 		return nil, err
 	}
 	return doc, nil

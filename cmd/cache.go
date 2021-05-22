@@ -3,8 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/xcrossing/jnfox/mdir"
 	"github.com/xcrossing/jnfox/util"
 )
 
@@ -17,6 +20,14 @@ var cmdCache = &cobra.Command{
 	Short: "Get Cover from cache first, then from web",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, nums []string) {
+		picDir := viper.GetString("pics")
+		if picDir == "" {
+			fmt.Fprintln(os.Stderr, "no pics config")
+			return
+		}
+
+		ext := ".jpg"
+
 		mg, err := util.NewMgInstance()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
@@ -25,12 +36,15 @@ var cmdCache = &cobra.Command{
 		defer mg.Close()
 
 		p := util.MakePool(threads, func(num string) {
-			doc, err := mg.Fetch(num)
+			_, err := mg.Fetch(num)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+				fmt.Fprintf(os.Stderr, "%s : %s\n", num, err.Error())
 				return
 			}
-			fmt.Println(doc.PicName())
+
+			path, _ := mdir.PathOfName(num, 3)
+			picPath := filepath.Join(picDir, path, num+ext)
+			fmt.Println(picPath, num)
 		})
 
 		for _, num := range nums {
@@ -38,7 +52,5 @@ var cmdCache = &cobra.Command{
 		}
 
 		p.Wait()
-
-		fmt.Println(nums)
 	},
 }
