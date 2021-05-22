@@ -46,8 +46,6 @@ func main() {
 		},
 	}
 
-	cmdCover.Flags().IntVarP(&threads, "threads", "t", 2, "threads to get cover")
-
 	var cmdCacheCover = &cobra.Command{
 		Use:   "cache-cover [nums]",
 		Short: "Get Cover from cache first, then from web",
@@ -78,9 +76,8 @@ func main() {
 		},
 	}
 
-	cmdCacheCover.Flags().IntVarP(&threads, "threads", "t", 2, "threads to get cover")
-
 	var rootCmd = &cobra.Command{Use: "jnfox"}
+	rootCmd.PersistentFlags().IntVarP(&threads, "threads", "t", 2, "threads to get cover")
 	rootCmd.AddCommand(cmdCover, cmdCacheCover)
 	rootCmd.Execute()
 }
