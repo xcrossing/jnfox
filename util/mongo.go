@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"context"
@@ -25,7 +25,7 @@ type mgDoc struct {
 
 const ext = ".jpg"
 
-func newMgInstance() (*mgInstance, error) {
+func NewMgInstance() (*mgInstance, error) {
 	uri := os.Getenv("JNFOX_MONGO_URI")
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
@@ -50,11 +50,11 @@ func newMgInstance() (*mgInstance, error) {
 	return &mgInstance{client: client, collection: collection}, nil
 }
 
-func (mg *mgInstance) close() {
+func (mg *mgInstance) Close() {
 	mg.client.Disconnect(aCtx())
 }
 
-func (mg *mgInstance) fetch(bango string) (*mgDoc, error) {
+func (mg *mgInstance) Fetch(bango string) (*mgDoc, error) {
 	doc := &mgDoc{}
 	err := mg.collection.FindOne(aCtx(), bson.D{{"bango", bango}}).Decode(doc)
 	if err != nil {
@@ -68,7 +68,7 @@ func aCtx() context.Context {
 	return ctx
 }
 
-func (d *mgDoc) picName() string {
+func (d *mgDoc) PicName() string {
 	if len(d.Stars) > 0 {
 		return fmt.Sprintf("%s-%s%s", d.Bango, strings.Join(d.Stars, " "), ext)
 	}

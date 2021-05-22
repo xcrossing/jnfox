@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func download(src string, dest string) error {
+func Download(src string, dest string) error {
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
 			r.URL.Opaque = r.URL.Path
