@@ -4,7 +4,20 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/spf13/viper"
 )
+
+func Host() string {
+	host := viper.GetString("host")
+
+	if strings.HasSuffix(host, "/") {
+		host = host[:len(host)-1]
+	}
+
+	return host
+}
 
 func Download(src string, dest string) error {
 	client := http.Client{

@@ -1,16 +1,26 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xcrossing/jnfox/util"
 )
 
 var (
 	threads int
 	cfgFile string
-	rootCmd = &cobra.Command{Use: "jnfox"}
+	rootCmd = &cobra.Command{
+		Use: "jnfox",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if host := util.Host(); host == "" {
+				return errors.New("you must config host")
+			}
+			return nil
+		},
+	}
 )
 
 func init() {

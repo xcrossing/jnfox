@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/xcrossing/jnfo"
 	"github.com/xcrossing/jnfox/util"
 )
@@ -21,18 +18,7 @@ var cmdCover = &cobra.Command{
 	Short: "Get Cover directly",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, nums []string) {
-		host := viper.GetString("host")
-		if host == "" {
-			fmt.Fprintln(os.Stderr, "no host config")
-			return
-		}
-
-		u, err := url.Parse(host)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s %s\n", host, err.Error())
-			return
-		}
-		path := u.Path
+		host := util.Host()
 
 		p := util.MakePool(threads, func(addr string) {
 			nfo, err := jnfo.New(addr)
@@ -46,8 +32,7 @@ var cmdCover = &cobra.Command{
 		})
 
 		for _, num := range nums {
-			u.Path = filepath.Join(path, num)
-			addr := u.String()
+			addr := host + "/" + num
 			p.Add(addr)
 		}
 
