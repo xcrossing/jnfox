@@ -2,11 +2,12 @@ package util
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -26,7 +27,12 @@ type mgDoc struct {
 const ext = ".jpg"
 
 func NewMgInstance() (*mgInstance, error) {
-	uri := os.Getenv("JNFOX_MONGO_URI")
+	mongoCfg := viper.Sub("mongo")
+	if mongoCfg == nil {
+		return nil, errors.New("no mongo config !")
+	}
+
+	uri := mongoCfg.GetString("uri")
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
@@ -44,8 +50,8 @@ func NewMgInstance() (*mgInstance, error) {
 	}
 
 	// get collection
-	db := client.Database(os.Getenv("JNFOX_MONGO_DB"))
-	collection := db.Collection(os.Getenv("JNFOX_MONGO_COLL"))
+	db := client.Database(mongoCfg.GetString("db"))
+	collection := db.Collection(mongoCfg.GetString("collection"))
 
 	return &mgInstance{client: client, collection: collection}, nil
 }

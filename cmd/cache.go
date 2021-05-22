@@ -20,6 +20,7 @@ var cmdCache = &cobra.Command{
 		mg, err := util.NewMgInstance()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+			return
 		}
 		defer mg.Close()
 

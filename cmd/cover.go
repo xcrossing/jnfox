@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/xcrossing/jnfo"
 	"github.com/xcrossing/jnfox/util"
 )
@@ -20,7 +21,12 @@ var cmdCover = &cobra.Command{
 	Short: "Get Cover directly",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, nums []string) {
-		host := os.Getenv("JNFOX_HOST")
+		host := viper.GetString("host")
+		if host == "" {
+			fmt.Fprintln(os.Stderr, "no host config")
+			return
+		}
+
 		u, err := url.Parse(host)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s %s\n", host, err.Error())
