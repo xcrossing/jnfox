@@ -3,10 +3,13 @@ package util
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/xcrossing/jnfo"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -20,6 +23,10 @@ type MgInstance struct {
 type MgDoc struct {
 	Bango string
 	Stars []string
+}
+
+type MgDocInsertion struct {
+	jnfo.Jnfo
 }
 
 const ext = ".jpg"
@@ -75,6 +82,42 @@ func (mg *MgInstance) BatchFetch(bangos []string) (*[]MgDoc, error) {
 		return nil, err
 	}
 	return &docs, nil
+}
+
+func (mg *MgInstance) InsertOne(nfo *MgDocInsertion) error {
+	doc := bson.D{
+		{"title", nfo.Title},
+	}
+	if duration, err := strconv.Atoi(nfo.Duration); err == nil {
+		doc = append(doc, primitive.E{"duration", duration})
+	}
+	if nfo.Studio != "" {
+		doc = append(doc, primitive.E{"studio", nfo.Studio})
+	}
+	if nfo.Label != "" {
+		doc = append(doc, primitive.E{"label", nfo.Label})
+	}
+	if nfo.Serie != "" {
+		doc = append(doc, primitive.E{"series", nfo.Serie})
+	}
+	if nfo.Director != "" {
+		doc = append(doc, primitive.E{"director", nfo.Director})
+	}
+	doc = append(doc, primitive.E{"categories", nfo.Categories})
+	doc = append(doc, primitive.E{"stars", nfo.Cast})
+	doc = append(doc, primitive.E{"prefix", nfo.prefix()})
+	doc = append(doc, primitive.E{"created_at", time.Now().Format("2006-01-02T15:04:05Z")})
+	doc = append(doc, primitive.E{"count_stars", len(nfo.Cast)})
+	doc = append(doc, primitive.E{"published_at", nfo.Date})
+	doc = append(doc, primitive.E{"bango", nfo.Num})
+
+	_, err := mg.collection.InsertOne(aCtx(), doc)
+	return err
+}
+
+func (mdi *MgDocInsertion) prefix() string {
+	dashIdx := strings.Index(mdi.Num, "-")
+	return mdi.Num[:dashIdx]
 }
 
 func aCtx() context.Context {

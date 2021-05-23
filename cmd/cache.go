@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/xcrossing/jnfo"
 	"github.com/xcrossing/jnfox/mdir"
 	"github.com/xcrossing/jnfox/util"
 )
@@ -53,7 +54,7 @@ var cmdCache = &cobra.Command{
 		for _, c := range caches {
 			p.Add(func(c cache) func() {
 				return func() {
-					fmt.Println(c)
+					c.process(mg)
 				}
 			}(c))
 		}
@@ -94,4 +95,28 @@ func checkCache(mongo *util.MgInstance, nums []string) ([]cache, error) {
 	}
 
 	return caches, nil
+}
+
+func (c *cache) process(mg *util.MgInstance) {
+	fmt.Println(*c)
+
+	var picLink string
+
+	if !c.hasDbCache {
+		nfo, err := jnfo.New(config.Host + "/" + c.bango)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s -> %s\n", c.bango, err)
+			return
+		}
+		picLink = nfo.PicLink
+
+		if err := mg.InsertOne(&util.MgDocInsertion{*nfo}); err != nil {
+			fmt.Fprintf(os.Stderr, "%s -> %s\n", c.bango, err)
+			return
+		}
+	}
+
+	if !c.hasPicCache && false {
+		util.Download(picLink, c.picCachePath)
+	}
 }
