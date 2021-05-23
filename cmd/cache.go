@@ -8,8 +8,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/xcrossing/jnfox/mdir"
 	"github.com/xcrossing/jnfox/util"
-	"go.mongodb.org/mongo-driver/mongo"
 )
+
+const ext = ".jpg"
+
+type cache struct {
+	bango       string
+	picName     string
+	picPath     string
+	inDb        bool
+	hasPicCache bool
+}
 
 func init() {
 	rootCmd.AddCommand(cmdCache)
@@ -20,13 +29,10 @@ var cmdCache = &cobra.Command{
 	Short: "Get Cover from cache first, then from web",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, nums []string) {
-		picDir := config.Pics
-		if picDir == "" {
+		if config.Pics.Root == "" || config.Pics.Sep == 0 {
 			fmt.Fprintln(os.Stderr, "no pics config")
 			return
 		}
-
-		ext := ".jpg"
 
 		mg, err := util.NewMgInstance(config.Mongo)
 		if err != nil {
@@ -35,22 +41,62 @@ var cmdCache = &cobra.Command{
 		}
 		defer mg.Close()
 
-		p := util.MakePool(threads, func(num string) {
-			_, err := mg.Fetch(num)
-			if err == mongo.ErrNoDocuments {
-				fmt.Fprintf(os.Stderr, "%s : %s\n", num, err.Error())
-				return
-			}
+		caches, err := checkCache(mg, nums)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+			return
+		}
+		fmt.Println(caches)
 
-			path, _ := mdir.PathOfName(num, 3)
-			picPath := filepath.Join(picDir, path, num+ext)
-			fmt.Println(picPath, num)
-		})
+		// p := util.MakePool(threads, func(num string) {
+		// 	_, err := mg.Fetch(num)
+		// 	if err == mongo.ErrNoDocuments {
+		// 		fmt.Fprintf(os.Stderr, "%s : %s\n", num, err.Error())
+		// 		return
+		// 	}
 
-		for _, num := range nums {
-			p.Add(num)
+		// 	path, _ := mdir.PathOfName(num, 3)
+		// 	picPath := filepath.Join(picDir, path, num+ext)
+		// 	fmt.Println(picPath, num)
+		// })
+
+		// for _, num := range nums {
+		// 	p.Add(num)
+		// }
+
+		// p.Wait()
+	},
+}
+
+func checkCache(mongo *util.MgInstance, nums []string) ([]cache, error) {
+	docs, err := mongo.BatchFetch(nums)
+	if err != nil {
+		return nil, err
+	}
+	mgDocMap := make(map[string]*util.MgDoc)
+	for _, doc := range *docs {
+		mgDocMap[doc.Bango] = &doc
+	}
+
+	caches := make([]cache, 0, len(nums))
+	for _, num := range nums {
+		path, _ := mdir.PathOfName(num, config.Pics.Sep)
+		picPath := filepath.Join(config.Pics.Root, path, num+ext)
+
+		macth, _ := filepath.Glob(picPath)
+		hasPicCache := (len(macth) > 0)
+
+		_, inDb := mgDocMap[num]
+
+		c := cache{
+			bango:       num,
+			picPath:     picPath,
+			inDb:        inDb,
+			hasPicCache: hasPicCache,
 		}
 
-		p.Wait()
-	},
+		caches = append(caches, c)
+	}
+
+	return caches, nil
 }

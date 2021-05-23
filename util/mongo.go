@@ -12,19 +12,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type mgInstance struct {
+type MgInstance struct {
 	client     *mongo.Client
 	collection *mongo.Collection
 }
 
-type mgDoc struct {
+type MgDoc struct {
 	Bango string
 	Stars []string
 }
 
 const ext = ".jpg"
 
-func NewMgInstance(cfgMongo ConfigMongo) (*mgInstance, error) {
+func NewMgInstance(cfgMongo ConfigMongo) (*MgInstance, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(cfgMongo.Uri))
 	if err != nil {
 		return nil, err
@@ -43,17 +43,17 @@ func NewMgInstance(cfgMongo ConfigMongo) (*mgInstance, error) {
 
 	// get collection
 	db := client.Database(cfgMongo.Db)
-	collection := db.Collection(cfgMongo.Collction)
+	collection := db.Collection(cfgMongo.Collection)
 
-	return &mgInstance{client: client, collection: collection}, nil
+	return &MgInstance{client: client, collection: collection}, nil
 }
 
-func (mg *mgInstance) Close() {
+func (mg *MgInstance) Close() {
 	mg.client.Disconnect(aCtx())
 }
 
-func (mg *mgInstance) Fetch(bango string) (*mgDoc, error) {
-	doc := &mgDoc{}
+func (mg *MgInstance) Fetch(bango string) (*MgDoc, error) {
+	doc := &MgDoc{}
 	result := mg.collection.FindOne(aCtx(), bson.D{{"bango", bango}})
 	if err := result.Err(); err != nil {
 		return nil, err
@@ -64,12 +64,25 @@ func (mg *mgInstance) Fetch(bango string) (*mgDoc, error) {
 	return doc, nil
 }
 
+func (mg *MgInstance) BatchFetch(bangos []string) (*[]MgDoc, error) {
+	docs := make([]MgDoc, len(bangos))
+	cursor, err := mg.collection.Find(aCtx(), bson.D{{"bango", bson.D{{"$in", bangos}}}})
+	if err != nil {
+		return nil, err
+	}
+	err = cursor.All(aCtx(), &docs)
+	if err != nil {
+		return nil, err
+	}
+	return &docs, nil
+}
+
 func aCtx() context.Context {
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	return ctx
 }
 
-func (d *mgDoc) PicName() string {
+func (d *MgDoc) PicName() string {
 	if len(d.Stars) > 0 {
 		return fmt.Sprintf("%s-%s%s", d.Bango, strings.Join(d.Stars, " "), ext)
 	}
