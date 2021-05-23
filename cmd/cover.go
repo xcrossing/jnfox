@@ -18,8 +18,6 @@ var cmdCover = &cobra.Command{
 	Short: "Get Cover directly",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, nums []string) {
-		host := util.Host()
-
 		p := util.MakePool(threads, func(addr string) {
 			nfo, err := jnfo.New(addr)
 			if err == nil {
@@ -32,7 +30,7 @@ var cmdCover = &cobra.Command{
 		})
 
 		for _, num := range nums {
-			addr := host + "/" + num
+			addr := config.Host + "/" + num
 			p.Add(addr)
 		}
 

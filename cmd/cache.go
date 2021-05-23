@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/xcrossing/jnfox/mdir"
 	"github.com/xcrossing/jnfox/util"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func init() {
@@ -20,7 +20,7 @@ var cmdCache = &cobra.Command{
 	Short: "Get Cover from cache first, then from web",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, nums []string) {
-		picDir := viper.GetString("pics")
+		picDir := config.Pics
 		if picDir == "" {
 			fmt.Fprintln(os.Stderr, "no pics config")
 			return
@@ -28,7 +28,7 @@ var cmdCache = &cobra.Command{
 
 		ext := ".jpg"
 
-		mg, err := util.NewMgInstance()
+		mg, err := util.NewMgInstance(config.Mongo)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			return
@@ -37,7 +37,7 @@ var cmdCache = &cobra.Command{
 
 		p := util.MakePool(threads, func(num string) {
 			_, err := mg.Fetch(num)
-			if err != nil {
+			if err == mongo.ErrNoDocuments {
 				fmt.Fprintf(os.Stderr, "%s : %s\n", num, err.Error())
 				return
 			}
