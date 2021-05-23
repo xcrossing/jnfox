@@ -46,25 +46,17 @@ var cmdCache = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			return
 		}
-		fmt.Println(caches)
 
-		// p := util.MakePool(threads, func(num string) {
-		// 	_, err := mg.Fetch(num)
-		// 	if err == mongo.ErrNoDocuments {
-		// 		fmt.Fprintf(os.Stderr, "%s : %s\n", num, err.Error())
-		// 		return
-		// 	}
+		p := util.MakeFuncPool(threads)
+		for _, c := range caches {
+			p.Add(func(c cache) func() {
+				return func() {
+					fmt.Println(c)
+				}
+			}(c))
+		}
 
-		// 	path, _ := mdir.PathOfName(num, 3)
-		// 	picPath := filepath.Join(picDir, path, num+ext)
-		// 	fmt.Println(picPath, num)
-		// })
-
-		// for _, num := range nums {
-		// 	p.Add(num)
-		// }
-
-		// p.Wait()
+		p.Wait()
 	},
 }
 
