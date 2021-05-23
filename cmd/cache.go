@@ -13,10 +13,12 @@ import (
 const ext = ".jpg"
 
 type cache struct {
-	bango       string
-	picName     string
-	picPath     string
-	inDb        bool
+	bango string
+
+	picName      string
+	picCachePath string
+
+	hasDbCache  bool
 	hasPicCache bool
 }
 
@@ -65,27 +67,28 @@ func checkCache(mongo *util.MgInstance, nums []string) ([]cache, error) {
 	if err != nil {
 		return nil, err
 	}
-	mgDocMap := make(map[string]*util.MgDoc)
+	mgDocMap := make(map[string]util.MgDoc)
 	for _, doc := range *docs {
-		mgDocMap[doc.Bango] = &doc
+		mgDocMap[doc.Bango] = doc
 	}
 
 	caches := make([]cache, 0, len(nums))
 	for _, num := range nums {
 		path, _ := mdir.PathOfName(num, config.Pics.Sep)
-		picPath := filepath.Join(config.Pics.Root, path, num+ext)
+		picCachePath := filepath.Join(config.Pics.Root, path, num+ext)
 
-		macth, _ := filepath.Glob(picPath)
-		hasPicCache := (len(macth) > 0)
+		c := cache{bango: num, picCachePath: picCachePath}
 
-		_, inDb := mgDocMap[num]
-
-		c := cache{
-			bango:       num,
-			picPath:     picPath,
-			inDb:        inDb,
-			hasPicCache: hasPicCache,
+		// hasDbCache
+		doc, inDb := mgDocMap[num]
+		c.hasDbCache = inDb
+		if c.hasDbCache {
+			c.picName = doc.PicName()
 		}
+
+		// hasPicCache
+		macth, _ := filepath.Glob(picCachePath)
+		c.hasPicCache = (len(macth) > 0)
 
 		caches = append(caches, c)
 	}
