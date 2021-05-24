@@ -8,14 +8,19 @@ import (
 
 type Config struct {
 	Host  string
-	Pics  string
+	Pics  ConfigPics
 	Mongo ConfigMongo
 }
 
 type ConfigMongo struct {
-	Uri       string
-	Db        string
-	Collction string
+	Uri        string
+	Db         string
+	Collection string
+}
+
+type ConfigPics struct {
+	Root string
+	Sep  int
 }
 
 func LoadConfig(path string) (*Config, error) {
