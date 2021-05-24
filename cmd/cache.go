@@ -98,25 +98,42 @@ func checkCache(mongo *util.MgInstance, nums []string) ([]cache, error) {
 }
 
 func (c *cache) process(mg *util.MgInstance) {
-	fmt.Println(*c)
+	var (
+		picLink string
+		picName string
+	)
 
-	var picLink string
-
-	if !c.hasDbCache {
+	if !c.hasDbCache || !c.hasPicCache {
 		nfo, err := jnfo.New(config.Host + "/" + c.bango)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s -> %s\n", c.bango, err)
 			return
 		}
 		picLink = nfo.PicLink
+		picName = nfo.NumCastPicName()
 
-		if err := mg.InsertOne(&util.MgDocInsertion{*nfo}); err != nil {
-			fmt.Fprintf(os.Stderr, "%s -> %s\n", c.bango, err)
+		if !c.hasDbCache {
+			if err := mg.InsertOne(&util.MgDocInsertion{*nfo}); err != nil {
+				fmt.Fprintf(os.Stderr, "%s -> %s\n", c.bango, err)
+				return
+			}
+		}
+	} else {
+		picName = c.picName
+	}
+
+	if !c.hasPicCache {
+		if err := os.MkdirAll(filepath.Dir(c.picCachePath), 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "fail to mkdir %s -> %s\n", c.bango, err)
+			return
+		}
+		if err := util.Download(picLink, c.picCachePath); err != nil {
+			fmt.Fprintf(os.Stderr, "fail to download %s from %s -> %s\n", c.bango, picLink, err)
 			return
 		}
 	}
 
-	if !c.hasPicCache && false {
-		util.Download(picLink, c.picCachePath)
+	if err := util.Cp(c.picCachePath, picName); err != nil {
+		fmt.Fprintf(os.Stderr, "fail to cp %s -> %s\n", c.bango, err)
 	}
 }
