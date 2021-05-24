@@ -113,7 +113,7 @@ func (c *cache) process(mg *util.MgInstance) {
 		picName = nfo.NumCastPicName()
 
 		if !c.hasDbCache {
-			if err := mg.InsertOne(&util.MgDocInsertion{*nfo}); err != nil {
+			if err := mg.InsertOne(nfo); err != nil {
 				fmt.Fprintf(os.Stderr, "%s -> %s\n", c.bango, err)
 				return
 			}

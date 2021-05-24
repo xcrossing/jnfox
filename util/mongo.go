@@ -25,10 +25,6 @@ type MgDoc struct {
 	Stars []string
 }
 
-type MgDocInsertion struct {
-	jnfo.Jnfo
-}
-
 const ext = ".jpg"
 
 func NewMgInstance(cfgMongo ConfigMongo) (*MgInstance, error) {
@@ -84,7 +80,7 @@ func (mg *MgInstance) BatchFetch(bangos []string) (*[]MgDoc, error) {
 	return &docs, nil
 }
 
-func (mg *MgInstance) InsertOne(nfo *MgDocInsertion) error {
+func (mg *MgInstance) InsertOne(nfo *jnfo.Jnfo) error {
 	doc := bson.D{
 		{"title", nfo.Title},
 	}
@@ -105,7 +101,7 @@ func (mg *MgInstance) InsertOne(nfo *MgDocInsertion) error {
 	}
 	doc = append(doc, primitive.E{"categories", nfo.Categories})
 	doc = append(doc, primitive.E{"stars", nfo.Cast})
-	doc = append(doc, primitive.E{"prefix", nfo.prefix()})
+	doc = append(doc, primitive.E{"prefix", nfo.Prefix()})
 	doc = append(doc, primitive.E{"created_at", time.Now().Format("2006-01-02T15:04:05Z")})
 	doc = append(doc, primitive.E{"count_stars", len(nfo.Cast)})
 	doc = append(doc, primitive.E{"published_at", nfo.Date})
@@ -113,11 +109,6 @@ func (mg *MgInstance) InsertOne(nfo *MgDocInsertion) error {
 
 	_, err := mg.collection.InsertOne(aCtx(), doc)
 	return err
-}
-
-func (mdi *MgDocInsertion) prefix() string {
-	dashIdx := strings.Index(mdi.Num, "-")
-	return mdi.Num[:dashIdx]
 }
 
 func aCtx() context.Context {
