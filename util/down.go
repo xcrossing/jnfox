@@ -5,9 +5,14 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 func Download(src string, dest string) error {
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+		return err
+	}
+
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
 			r.URL.Opaque = r.URL.Path

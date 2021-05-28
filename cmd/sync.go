@@ -5,10 +5,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/xcrossing/jnfo"
 	"github.com/xcrossing/jnfox/crawler"
+	"github.com/xcrossing/jnfox/mdir"
 	"github.com/xcrossing/jnfox/util"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -63,4 +66,14 @@ func syncNum(uri string, mg *util.MgInstance) {
 		fmt.Println(time.Now(), num, "found")
 		return
 	}
+
+	nfo, err := jnfo.New(uri)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+	}
+
+	// down cover
+	path, _ := mdir.PathOfName(num, config.Pics.Sep)
+	picCachePath := filepath.Join(config.Pics.Root, path, num+ext)
+	util.Download(nfo.PicLink, picCachePath)
 }
