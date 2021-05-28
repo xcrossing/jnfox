@@ -1,6 +1,8 @@
 package util
 
-import "sync"
+import (
+	"sync"
+)
 
 type pool struct {
 	wg sync.WaitGroup

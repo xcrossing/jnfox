@@ -123,10 +123,6 @@ func (c *cache) process(mg *util.MgInstance) {
 	}
 
 	if !c.hasPicCache {
-		if err := os.MkdirAll(filepath.Dir(c.picCachePath), 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "fail to mkdir %s -> %s\n", c.bango, err)
-			return
-		}
 		if err := util.Download(picLink, c.picCachePath); err != nil {
 			fmt.Fprintf(os.Stderr, "fail to download %s from %s -> %s\n", c.bango, picLink, err)
 			return
