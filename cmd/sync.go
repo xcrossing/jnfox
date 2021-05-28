@@ -3,9 +3,14 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"net/url"
+	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/xcrossing/jnfox/crawler"
+	"github.com/xcrossing/jnfox/util"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func init() {
@@ -26,12 +31,36 @@ var cmdSync = &cobra.Command{
 			},
 		}
 
-		links := []string{}
+		// mongo client init
+		mg, err := util.NewMgInstance(config.Mongo)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+			return
+		}
+		defer mg.Close()
 
+		// fetch info in threads
+		p := util.MakeFuncPool(threads)
 		w.Start(func(e *crawler.Element) {
-			links = append(links, e.Attr("href"))
+			p.Add(func(uri string) func() {
+				return func() {
+					syncNum(uri, mg)
+				}
+			}(e.Attr("href")))
 		})
-
-		fmt.Println(links)
+		p.Wait()
 	},
+}
+
+func syncNum(uri string, mg *util.MgInstance) {
+	<-time.After(2 * time.Second)
+
+	u, _ := url.Parse(uri)
+	num := u.Path[1:]
+
+	_, err := mg.Fetch(num)
+	if err != mongo.ErrNoDocuments {
+		fmt.Println(time.Now(), num, "found")
+		return
+	}
 }
