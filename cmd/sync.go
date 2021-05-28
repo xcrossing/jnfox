@@ -73,7 +73,18 @@ func syncNum(uri string, mg *util.MgInstance) {
 	}
 
 	// down cover
-	path, _ := mdir.PathOfName(num, config.Pics.Sep)
-	picCachePath := filepath.Join(config.Pics.Root, path, num+ext)
-	util.Download(nfo.PicLink, picCachePath)
+	path, _ := mdir.PathOfName(nfo.Num, config.Pics.Sep)
+	picCachePath := filepath.Join(config.Pics.Root, path, nfo.Num+ext)
+	if err := util.Download(nfo.PicLink, picCachePath); err != nil {
+		fmt.Fprintf(os.Stderr, "%s -> %s\n", nfo.Num, err)
+		return
+	}
+
+	// save info
+	if err := mg.InsertOne(nfo); err != nil {
+		fmt.Fprintf(os.Stderr, "%s -> %s\n", nfo.Num, err)
+		return
+	}
+
+	fmt.Println(time.Now(), num, "synced => "+picCachePath)
 }
