@@ -281,6 +281,8 @@ github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhV
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/xcrossing/jnfo v1.0.0 h1:NGe1+2WFFs5CKrZoT3/lQl1EmzDux/OddUN+jPR3cVI=
 github.com/xcrossing/jnfo v1.0.0/go.mod h1:amRjYIkRcCzwE0z6s+82UgRZY9S74nY8V27z0rGcuEI=
+github.com/xcrossing/jnfo v1.1.0 h1:IPHzUjABQCbOEut9281Xg75n+2geCvL6qSHrpaGgSJk=
+github.com/xcrossing/jnfo v1.1.0/go.mod h1:amRjYIkRcCzwE0z6s+82UgRZY9S74nY8V27z0rGcuEI=
 github.com/xdg-go/pbkdf2 v1.0.0 h1:Su7DPu48wXMwC3bs7MCNG+z4FhcyEuz5dlvchbq0B0c=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.0.2 h1:akYIkZ28e6A96dkWNJQu3nmCzH3YfwMPQExUYDaRv7w=
